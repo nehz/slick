@@ -27,9 +27,6 @@ end
 
 getfenv = rawget(_G, 'getfenv') or function(f)
   assert(f)
-  if cache[f] then return cache[f] end
-  cache[f] = f
-
   local val = select(2, find_env(f))
   if val then return val end
 
