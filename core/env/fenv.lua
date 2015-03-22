@@ -22,6 +22,7 @@ setfenv = rawget(_G, 'setfenv') or function(f, t)
   else
     cache[f] = t
   end
+  return f
 end
 
 
