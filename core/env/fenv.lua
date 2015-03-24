@@ -42,3 +42,24 @@ getfenv = rawget(_G, 'getfenv') or function(f)
   if not cache[f] then cache[f] = {} end
   return cache[f]
 end
+
+
+function bindfenv(f, env, global)
+  if global == true then global = _G end
+  return function(...)
+    local new_env = setmetatable(env, { __index = global })
+    local t = coroutine.create(f)
+    local args = table.pack(...)
+
+    while true do
+      local old_env = getfenv(f)
+      setfenv(f, new_env)
+      local res = table.pack(coroutine.resume(t, table.unpack(args, 1, args.n)))
+      setfenv(f, old_env)
+
+      if not res[1] then error(res[2]) end
+      if coroutine.status(t) == 'dead' then return res end
+      args = table.pack(coroutine.yield(table.unpack(res, 2, res.n)))
+    end
+  end
+end
