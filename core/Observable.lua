@@ -44,8 +44,8 @@ end
 
 
 function Observable.chain(o1, o2, is_direct_chain)
-  assert(is_observable(o1) and is_observable(o2), 'Observable expected')
-  assert(#o1['$observers'] == 0, 'Observers migration not yet supported yet')
+  assert(is_observable(o1) and is_observable(o2), '[Observable] expected')
+  assert(#o1['$observers'] == 0, '[Observer] migration not yet supported yet')
 
   o1['$chain'] = true
   if not is_direct_chain then o2 = Observable.resolve(o2) end
@@ -182,7 +182,7 @@ function Observable.next(o, idx)
   assert(is_observable(o))
 
   local t = Observable.unwrap(o)
-  assert(type(t) == 'table', 'table expected, got ' .. tostring(t))
+  assert(type(t) == 'table', '[table] expected, got ' .. tostring(t))
   assert(not is_observable(t))
 
   local k = next(t, idx)
@@ -194,7 +194,7 @@ function Observable.inext(o, idx)
   assert(is_observable(o))
 
   local t = Observable.unwrap(o)
-  assert(type(t) == 'table', 'table expected, got ' .. tostring(t))
+  assert(type(t) == 'table', '[table] expected, got ' .. tostring(t))
   assert(not is_observable(t))
 
   local n = rawget(t, '$n') or #t
@@ -222,7 +222,7 @@ end
 
 function Observable:__len()
   local t = Observable.unwrap(self)
-  assert(type(t) == 'table', 'table expected, got ' .. tostring(t))
+  assert(type(t) == 'table', '[table] expected, got ' .. tostring(t))
   return rawget(t, '$n') or #t
 end
 
