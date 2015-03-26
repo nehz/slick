@@ -1,4 +1,4 @@
-require('core.env.bootstrap')
+require('core.env')
 local Observable = require('core.Observable')
 
 
