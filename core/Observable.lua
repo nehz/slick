@@ -112,10 +112,6 @@ function Observable.notify(o, idx, v, id)
   local c = rawget(o, '$value')
   assert(obs)
 
-  if is_observable(c) then
-    Observable.notify(c, nil, v, id)
-  end
-
   for callback, scope in pairs(obs) do
     if scope and rawget(scope, '$destroyed') then
       obs[callback] = nil
