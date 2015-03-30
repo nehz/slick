@@ -89,8 +89,12 @@ function Observable.watch(o, idx, f, scope, create_thread)
   -- TODO: possible to get function env from thread ?
   if create_thread then f = coroutine.create(f) end
 
+  -- Use new table as a unique id
+  local id = {}
+
   o = Observable.resolve(o)
-  o['$observers'][f] = scope
+  o['$observers'][f] = {id = id, scope = scope}
+  return id
 end
 
 
@@ -108,23 +112,27 @@ end
 
 
 function Observable.notify(o, idx, v, id)
-  local obs = o['$observers']
+  local observers = o['$observers']
   local c = rawget(o, '$value')
-  assert(obs)
+  assert(observers)
 
-  for callback, scope in pairs(obs) do
-    if scope and rawget(scope, '$destroyed') then
-      obs[callback] = nil
+  for callback, obs in pairs(observers) do
+    if obs.scope and rawget(obs.scope, '$destroyed') then
+      observers[callback] = nil
     else
       if type(callback) == 'thread' then
         if coroutine.status(callback) == 'dead' then
-          obs[callback] = nil
+          observers[callback] = nil
         else
-          local success, msg = coroutine.resume(callback, v, idx, id)
-          if not success then error(msg) end
+          if id == nil or obs.id ~= id then
+            local ok, msg = coroutine.resume(callback, v, idx, id)
+            if not ok then error(msg) end
+          end
         end
       else
-        callback(v, idx, id)
+        if id == nil or obs.id ~=id then
+          callback(v, idx, id)
+        end
       end
     end
   end
