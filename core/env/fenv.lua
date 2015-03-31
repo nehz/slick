@@ -58,7 +58,17 @@ function bindfenv(f, env, global_env, access_global)
       local res = table.pack(coroutine.resume(t, table.unpack(args, 1, args.n)))
       setfenv(f, old_env)
 
-      if not res[1] then error(res[2]) end
+      if not res[1] then
+        local e = res[2]
+        if type(e) == 'table' then
+          e.traceback = debug.traceback(t)
+          error(e)
+        else
+          assert(type(e) == 'string')
+          error(debug.traceback(t, e))
+        end
+      end
+
       if coroutine.status(t) == 'dead' then return res end
       args = table.pack(coroutine.yield(table.unpack(res, 2, res.n)))
     end
