@@ -17,6 +17,11 @@ end
 Observable.is_table = is_table
 
 
+local function is_indexable(t)
+  return type(Observable.unwrap(t)) == 'table'
+end
+
+
 function Observable.new(value, is_chain)
   local o
 
@@ -79,6 +84,13 @@ function Observable.unwrap(o, parent)
     end
   end
   return o, parent
+end
+
+
+function Observable.unwrap_indexable(o, parent)
+  assert(is_indexable(o),
+    '[table] expected, got ' .. tostring(Observable.unwrap(o)))
+  return Observable.unwrap(o, parent)
 end
 
 
@@ -148,9 +160,8 @@ end
 
 function Observable.set_index(o, idx, v, id)
   assert(is_observable(o))
+  local t, p = Observable.unwrap_indexable(o)
 
-  local t, p = Observable.unwrap(o)
-  assert(type(t) == 'table', 'Cannot index: ' .. tostring(t))
   assert(not is_observable(t))
 
   local slot = rawget(t, idx)
@@ -165,9 +176,7 @@ end
 
 function Observable.index(o, idx, create_nil)
   assert(is_observable(o))
-
-  local t = Observable.unwrap(o)
-  assert(type(t) == 'table', 'Cannot index: ' .. tostring(t))
+  local t = Observable.unwrap_indexable(o)
 
   if is_observable(t) then
     return Observable.index(t, idx, create_nil)
@@ -184,9 +193,8 @@ end
 
 function Observable.next(o, idx)
   assert(is_observable(o))
+  local t = Observable.unwrap_indexable(o)
 
-  local t = Observable.unwrap(o)
-  assert(type(t) == 'table', '[table] expected, got ' .. tostring(t))
   assert(not is_observable(t))
 
   local k = next(t, idx)
@@ -196,9 +204,8 @@ end
 
 function Observable.inext(o, idx)
   assert(is_observable(o))
+  local t = Observable.unwrap_indexable(o)
 
-  local t = Observable.unwrap(o)
-  assert(type(t) == 'table', '[table] expected, got ' .. tostring(t))
   assert(not is_observable(t))
 
   local n = rawget(t, '$n') or #t
@@ -225,8 +232,7 @@ end
 
 
 function Observable:__len()
-  local t = Observable.unwrap(self)
-  assert(type(t) == 'table', '[table] expected, got ' .. tostring(t))
+  local t = Observable.unwrap_indexable(self)
   return rawget(t, '$n') or #t
 end
 
