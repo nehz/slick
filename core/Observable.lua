@@ -162,7 +162,10 @@ function Observable.set_index(o, idx, v, id)
   assert(is_observable(o))
   local t, p = Observable.unwrap_indexable(o)
 
-  assert(not is_observable(t))
+  if is_observable(t) then
+    Observable.set_index(t, idx, v, id)
+    return
+  end
 
   local slot = rawget(t, idx)
   if not slot then
@@ -195,7 +198,9 @@ function Observable.next(o, idx)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
 
-  assert(not is_observable(t))
+  if is_observable(t) then
+    return Observable.next(t, idx)
+  end
 
   local k = next(t, idx)
   return k, o[k]
@@ -206,7 +211,9 @@ function Observable.inext(o, idx)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
 
-  assert(not is_observable(t))
+  if is_observable(t) then
+    return Observable.inext(t, idx)
+  end
 
   local n = rawget(t, '$n') or #t
   idx = idx + 1
