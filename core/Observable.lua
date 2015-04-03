@@ -20,6 +20,7 @@ Observable.is_table = is_table
 local function is_indexable(t)
   return type(Observable.unwrap(t)) == 'table'
 end
+Observable.is_indexable = is_indexable
 
 
 function Observable.new(value, is_chain)
