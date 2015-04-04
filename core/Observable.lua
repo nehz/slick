@@ -255,4 +255,9 @@ function Observable:__ipairs()
 end
 
 
+function Observable:__tostring()
+  return string.format('Observable(%s)', tostring(Observable.unwrap(self)))
+end
+
+
 return Observable
