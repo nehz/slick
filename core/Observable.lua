@@ -23,8 +23,9 @@ end
 Observable.is_indexable = is_indexable
 
 
-function Observable.new(value, is_chain)
+function Observable.new(value, options)
   local o
+  options = options or {}
 
   if is_table(value) then
     assert(getmetatable(value) == nil)
@@ -44,7 +45,7 @@ function Observable.new(value, is_chain)
   end
 
   o['$observers'] = {}
-  o['$chain'] = is_chain or false
+  o['$chain'] = options.is_chain or false
   return setmetatable(o, Observable)
 end
 
