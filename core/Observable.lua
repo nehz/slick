@@ -163,6 +163,7 @@ end
 function Observable.set_index(o, idx, v, id)
   assert(is_observable(o))
   local t, p = Observable.unwrap_indexable(o)
+  if is_table(v) then v = Observable.new(v) end
 
   if is_observable(t) then
     Observable.set_index(t, idx, v, id)
@@ -243,7 +244,6 @@ end
 
 function Observable:__newindex(idx, v)
   assert(self['$chain'] == false)
-  if is_table(v) then v = Observable.new(v) end
   Observable.set_index(self, idx, v)
 end
 
