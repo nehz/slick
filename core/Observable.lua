@@ -119,7 +119,9 @@ function Observable.unwatch(o, idx, f)
   end
 
   o = Observable.resolve(o)
+  local watcher = o['$observers'][f]
   o['$observers'][f] = nil
+  return watcher
 
   -- TODO: set clean up o[idx] if no watchers on itself or (grand)child(s)
 end
@@ -194,6 +196,29 @@ function Observable.index(o, idx, create_nil)
   end
 
   return t[idx]
+end
+
+
+function Observable.set_slot(o, idx, slot)
+  assert(is_observable(o) and is_observable(slot))
+  local t = Observable.unwrap_indexable(o)
+  t[idx] = slot
+  return slot
+end
+
+
+function Observable.del_slot(o, idx)
+  assert(is_observable(o))
+  local t = Observable.unwrap_indexable(o)
+
+  if is_observable(t) then
+    Observable.del_index(t, idx)
+    return
+  end
+
+  local slot = t[idx]
+  t[idx] = nil
+  return slot
 end
 
 
