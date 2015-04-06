@@ -220,6 +220,24 @@ function Observable.inext(o, idx)
   local n = rawget(t, '$n') or #t
   idx = idx + 1
   if idx <= n then return idx, o[idx] end
+
+
+function Observable.snext(o, idx)
+  assert(is_observable(o))
+  local t = Observable.unwrap_indexable(o)
+
+  if is_observable(t) then
+    return Observable.snext(t, idx)
+  end
+
+  local k = next(t, idx)
+  return k, t[k]
+end
+
+
+function Observable.spairs(o)
+  assert(is_observable(o))
+  return Observable.snext, o, nil
 end
 
 

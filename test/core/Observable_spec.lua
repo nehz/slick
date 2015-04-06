@@ -14,7 +14,7 @@ describe('Observable', function()
     assert.is.same({Observable.unwrap(o)}, {1, o})
   end)
 
-  describe('table fields', function()
+  describe('table value', function()
     it('should be accessible', function()
       local o = Observable.new({a = 1})
       assert.is.equal(o.a, 1)
@@ -80,6 +80,28 @@ describe('Observable', function()
       i, v = iter(o, 3)
       assert.is.equal(i, 4)
       assert.is.equal(v.e, 1)
+    end)
+
+    it('should be iterable with Observable.spairs', function()
+      local o = Observable.new({a = 1, b = false, c = 'test', d = {e = 1}})
+      local num_keys = 0
+      for k, s in Observable.spairs(o) do
+        if k == 'a' then
+          assert.is.equal(s, Observable.index(o, 'a'))
+          assert.is.equal(Observable.unwrap(s), 1)
+        elseif k == 'b' then
+          assert.is.equal(s, Observable.index(o, 'b'))
+          assert.is.equal(Observable.unwrap(s), false)
+        elseif k == 'c' then
+          assert.is.equal(s, Observable.index(o, 'c'))
+          assert.is.equal(Observable.unwrap(s), 'test')
+        elseif k == 'd' then
+          assert.is.equal(s, Observable.index(o, 'd'))
+          assert.is.equal(s.e, 1)
+        else error() end
+        num_keys = num_keys + 1
+      end
+      assert.is.equal(num_keys, 4)
     end)
   end)
 
