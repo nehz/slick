@@ -269,7 +269,7 @@ end
 
 function Observable:__newindex(idx, v)
   assert(self['$chain'] == false)
-  Observable.set_index(self, idx, v)
+  Observable.set_index(self, idx, v, debug.getinfo(2, 'f').func)
 end
 
 
