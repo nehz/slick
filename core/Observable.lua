@@ -31,14 +31,15 @@ function Observable.new(value, options)
     assert(getmetatable(value) == nil)
 
     -- Shape table into an observable
-    local copy = {}
-    for k, v in pairs(value) do
-      if is_table(v) then v = Observable.new(v) end
-      copy[k] = Observable.new(v)
-      value[k] = nil
-    end
+    local t = {}
     o = value
-    rawset(o, '$value', copy)
+
+    for k, v in pairs(o) do
+      if is_table(v) then v = Observable.new(v) end
+      t[k] = Observable.new(v)
+      o[k] = nil
+    end
+    rawset(o, '$value', t)
   else
     o = {}
     rawset(o, '$value', value)
