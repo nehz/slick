@@ -46,27 +46,7 @@ function Observable.new(value, options)
   end
 
   o['$observers'] = {}
-  o['$chain'] = options.is_chain or false
   return setmetatable(o, Observable)
-end
-
-
-function Observable.chain(o1, o2, is_direct_chain)
-  assert(is_observable(o1) and is_observable(o2), '[Observable] expected')
-  assert(#o1['$observers'] == 0, '[Observer] migration not yet supported yet')
-
-  o1['$chain'] = true
-  if not is_direct_chain then o2 = Observable.resolve(o2) end
-  rawset(o1, '$value', o2)
-end
-
-
-function Observable.resolve(o)
-  assert(is_observable(o))
-  if o['$chain'] then
-    return Observable.resolve(rawget(o, '$value'))
-  end
-  return o
 end
 
 
@@ -80,11 +60,8 @@ end
 
 function Observable.unwrap(o, parent)
   if is_observable(o) then
-    if o['$chain'] then
-      return Observable.unwrap(rawget(o, '$value'), o)
-    else
-      return rawget(o, '$value'), o
-    end
+    local v = rawget(o, '$value')
+    return v, o
   end
   return o, parent
 end
@@ -106,8 +83,6 @@ function Observable.watch(o, idx, f, scope, create_thread)
 
   -- Use new table as a unique id
   local id = {}
-
-  o = Observable.resolve(o)
   o['$observers'][f] = {id = id, scope = scope}
   return id
 end
@@ -119,7 +94,6 @@ function Observable.unwatch(o, idx, f)
     if not o then return end
   end
 
-  o = Observable.resolve(o)
   local watcher = o['$observers'][f]
   o['$observers'][f] = nil
   return watcher
@@ -157,9 +131,8 @@ end
 
 
 function Observable.set(o, v, id)
-  local r = Observable.resolve(o)
-  rawset(r, '$value', v)
-  Observable.notify(r, nil, v, id)
+  Observable.notify(o, nil, v, id)
+  rawset(o, '$value', v)
 end
 
 
@@ -276,7 +249,6 @@ end
 
 
 function Observable:__newindex(idx, v)
-  assert(self['$chain'] == false)
   Observable.set_index(self, idx, v, debug.getinfo(2, 'f').func)
 end
 
