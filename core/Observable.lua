@@ -246,7 +246,8 @@ function Observable.inext(o, idx)
 
   local n = rawget(t, '$n') or #t
   idx = idx + 1
-  if idx <= n then return idx, o[idx] end
+  if idx <= n then return idx, Observable.unwrap(t[idx]) end
+end
 
 
 function Observable.snext(o, idx)
