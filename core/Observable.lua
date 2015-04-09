@@ -231,8 +231,14 @@ function Observable.next(o, idx)
     return Observable.next(t, idx)
   end
 
-  local k = next(t, idx)
-  return k, o[k]
+  local k = idx
+  while true do
+    k = next(t, k)
+    if k == nil then return nil end
+
+    local v = Observable.unwrap(t[k])
+    if v ~= nil then return k, v end
+  end
 end
 
 
