@@ -17,15 +17,34 @@ end
 Observable.is_table = is_table
 
 
-local function is_indexable(t)
-  return type(Observable.unwrap(t)) == 'table'
+local function is_indexable(o)
+  -- Unwrap twice for slots (slot -> obs -> value(table))
+  return is_table(Observable.unwrap(Observable.unwrap(o)))
 end
 Observable.is_indexable = is_indexable
+
+
+local function make_slot(o, t, idx, v)
+  assert(is_table(t))
+  local slot = Observable.new(v, {slot = true})
+  t[idx] = slot
+
+  Observable.watch(slot, nil, function(v, _, id)
+    Observable.notify(o, idx, v, id)
+  end)
+
+  return slot
+end
 
 
 function Observable.new(value, options)
   local o
   options = options or {}
+
+  if not options.slot then
+    assert(not is_observable(value), 'Value is [Observable]')
+  end
+
 
   if is_table(value) then
     assert(getmetatable(value) == nil)
@@ -36,7 +55,7 @@ function Observable.new(value, options)
 
     for k, v in pairs(o) do
       if is_table(v) then v = Observable.new(v) end
-      t[k] = Observable.new(v)
+      make_slot(o, t, k, v)
       o[k] = nil
     end
     rawset(o, '$value', t)
@@ -46,6 +65,7 @@ function Observable.new(value, options)
   end
 
   o['$observers'] = {}
+  o['$slot'] = options.slot or false
   return setmetatable(o, Observable)
 end
 
@@ -58,19 +78,23 @@ function Observable.wrap(v)
 end
 
 
-function Observable.unwrap(o, parent)
+function Observable.unwrap(o)
   if is_observable(o) then
     local v = rawget(o, '$value')
-    return v, o
+    if is_observable(v) then
+      assert(o['$slot'] and not v['$slot'] and is_table(rawget(v, '$value')))
+    end
+    return v
   end
-  return o, parent
+  return o
 end
 
 
-function Observable.unwrap_indexable(o, parent)
-  assert(is_indexable(o),
-    '[table] expected, got ' .. tostring(Observable.unwrap(o)))
-  return Observable.unwrap(o, parent)
+function Observable.unwrap_indexable(o)
+  -- Unwrap twice for slots (slot -> obs -> value(table))
+  local t = Observable.unwrap(Observable.unwrap(o))
+  assert(is_table(t), '[table] expected, got ' .. tostring(t))
+  return t
 end
 
 
@@ -131,6 +155,7 @@ end
 
 
 function Observable.set(o, v, id)
+  if is_table(v) then v = Observable.new(v) end
   Observable.notify(o, nil, v, id)
   rawset(o, '$value', v)
 end
@@ -138,37 +163,22 @@ end
 
 function Observable.set_index(o, idx, v, id)
   assert(is_observable(o))
-  local t, p = Observable.unwrap_indexable(o)
+  local t = Observable.unwrap_indexable(o)
+  local slot = t[idx]
+  if not slot then slot = make_slot(o, t, idx, nil) end
+
   if is_table(v) then v = Observable.new(v) end
-
-  if is_observable(t) then
-    Observable.set_index(t, idx, v, id)
-    return
-  end
-
-  local slot = rawget(t, idx)
-  if not slot then
-    t[idx] = Observable.new(v)
-  else
-    Observable.set(slot, v, id)
-  end
-  Observable.notify(p, idx, v, id)
+  Observable.set(slot, v, id)
 end
 
 
 function Observable.index(o, idx, create_nil)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
-
-  if is_observable(t) then
-    return Observable.index(t, idx, create_nil)
-  end
-
   if t[idx] == nil then
     if not create_nil then return nil end
-    t[idx] = Observable.new(nil)
+    make_slot(o, t, idx, nil)
   end
-
   return t[idx]
 end
 
@@ -184,12 +194,6 @@ end
 function Observable.del_slot(o, idx)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
-
-  if is_observable(t) then
-    Observable.del_index(t, idx)
-    return
-  end
-
   local slot = t[idx]
   t[idx] = nil
   return slot
@@ -199,11 +203,6 @@ end
 function Observable.next(o, idx)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
-
-  if is_observable(t) then
-    return Observable.next(t, idx)
-  end
-
   local k = idx
   while true do
     k = next(t, k)
@@ -218,11 +217,6 @@ end
 function Observable.inext(o, idx)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
-
-  if is_observable(t) then
-    return Observable.inext(t, idx)
-  end
-
   local n = rawget(t, '$n') or #t
   idx = idx + 1
   if idx <= n then return idx, Observable.unwrap(t[idx]) end
@@ -232,11 +226,6 @@ end
 function Observable.snext(o, idx)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
-
-  if is_observable(t) then
-    return Observable.snext(t, idx)
-  end
-
   local k = next(t, idx)
   return k, t[k]
 end
@@ -256,10 +245,7 @@ end
 function Observable:__index(idx)
   local slot = Observable.index(self, idx)
   if slot == nil then return nil end
-
-  local v, p = Observable.unwrap(rawget(slot, '$value'))
-  if type(v) == 'table' then return p end
-  return v
+  return Observable.unwrap(slot)
 end
 
 
@@ -280,6 +266,9 @@ end
 
 
 function Observable:__tostring()
+  if self['$slot'] then
+    return string.format('<%s>', tostring(Observable.unwrap(self)))
+  end
   return string.format('Observable(%s)', tostring(Observable.unwrap(self)))
 end
 
