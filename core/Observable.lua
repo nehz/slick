@@ -66,6 +66,8 @@ function Observable.new(value, options)
 
   o['$observers'] = {}
   o['$slot'] = options.slot or false
+  o['$merge'] = options.merge == nil and true or options.merge
+
   return setmetatable(o, Observable)
 end
 
@@ -82,7 +84,7 @@ function Observable.unwrap(o)
   if is_observable(o) then
     local v = rawget(o, '$value')
     if is_observable(v) then
-      assert(o['$slot'] and not v['$slot'] and is_table(rawget(v, '$value')))
+      assert(not v['$slot'] and is_table(rawget(v, '$value')))
     end
     return v
   end
@@ -156,6 +158,24 @@ end
 
 function Observable.set(o, v, id)
   if is_table(v) then v = Observable.new(v) end
+  if is_indexable(v) then
+    assert(is_observable(v))
+
+    -- Merge keys into current table
+    if v['$merge'] and o['$merge'] and is_indexable(o) then
+      Observable.notify(o, nil, v, id)
+      for k, slot in Observable.spairs(o) do
+        Observable.set(slot, v[k], id)
+      end
+      for k, slot in Observable.spairs(v) do
+        if not o[k] then
+          Observable.set(Observable.index(o, k, true), v[k])
+        end
+      end
+      return
+    end
+  end
+
   Observable.notify(o, nil, v, id)
   rawset(o, '$value', v)
 end
