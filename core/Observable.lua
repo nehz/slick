@@ -204,7 +204,8 @@ end
 
 
 function Observable.set_slot(o, idx, slot)
-  assert(is_observable(o) and is_observable(slot))
+  assert(is_observable(o))
+  assert(is_observable(slot) and slot['$slot'], 'argument #2 is not a slot')
   local t = Observable.unwrap_indexable(o)
   t[idx] = slot
   return slot
