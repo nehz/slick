@@ -186,8 +186,6 @@ function Observable.set_index(o, idx, v, id)
   local t = Observable.unwrap_indexable(o)
   local slot = t[idx]
   if not slot then slot = make_slot(o, t, idx, nil) end
-
-  if is_table(v) then v = Observable.new(v) end
   Observable.set(slot, v, id)
 end
 
