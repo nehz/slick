@@ -30,13 +30,22 @@ describe('Observable', function()
     end)
 
     it('should convert assigned tables to [Observable]', function()
-      local o = Observable.new({a = 1, b = {}})
+      local o = Observable.new({a = 1, b = {2, 3}})
       local c = {}
       o.c = c
       assert.is_false(Observable.is_observable(o.a))
       assert.is_true(Observable.is_observable(o.b))
       assert.is_true(Observable.is_observable(c))
       assert.is_true(Observable.is_observable(o.c))
+    end)
+
+    it('should not convert assigned `objects` to [Observable]', function()
+      local o = Observable.new({})
+      local a = setmetatable({}, {})
+      o.a = a
+      assert.is_false(Observable.is_observable(o.a))
+      assert.is_true(Observable.is_table(o.a))
+      assert.is.equal(a, o.a)
     end)
 
     it('should have the correct length', function()
