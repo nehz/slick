@@ -63,7 +63,8 @@ function Observable.new(value, options)
     rawset(o, '$value', value)
   end
 
-  o['$observers'] = {}
+  o['$observers'] = setmetatable({}, {__mode = 'v'})
+  o['$observers_id'] = setmetatable({}, {__mode = 'k'})
   o['$slot'] = options.slot or false
   o['$merge'] = options.merge == nil and true or options.merge
 
@@ -100,53 +101,70 @@ end
 
 
 function Observable.watch(o, idx, f, scope, create_thread)
+  assert(is_observable(o))
+
   if idx then o = Observable.index(o, idx, true) end
-  scope = scope or rawget(getfenv(f), '$scope') or {}
+  scope = scope or rawget(getfenv(f), 'scope') or true
 
   -- TODO: possible to get function env from thread ?
   if create_thread then f = coroutine.create(f) end
 
   -- Use new table as a unique id
   local id = {}
-  o['$observers'][f] = {id = id, scope = scope}
-  return id
+  local ids = o['$observers_id']
+  if not ids[scope] then ids[scope] = {} end
+
+  o['$observers'][f] = scope
+  ids[scope][f] = id
+
+  return id, f
 end
 
 
 function Observable.unwatch(o, idx, f)
+  assert(is_observable(o))
+
   if idx then
     o = Observable.index(o, idx)
     if not o then return end
   end
 
-  local watcher = o['$observers'][f]
-  o['$observers'][f] = nil
-  return watcher
+  local scope = o['$observers'][f]
+  if scope then
+    o['$observers'][f] = nil
+    o['$observers_id'][scope][f] = nil
+    return f
+  end
 
   -- TODO: set clean up o[idx] if no watchers on itself or (grand)child(s)
 end
 
 
 function Observable.notify(o, idx, v, id)
+  assert(is_observable(o))
+
   local observers = o['$observers']
-  local c = rawget(o, '$value')
   assert(observers)
 
-  for callback, obs in pairs(observers) do
-    if obs.scope and rawget(obs.scope, '$destroyed') then
+  for callback, scope in pairs(observers) do
+    local ids = o['$observers_id'][scope]
+    assert(ids[callback])
+
+    if type(scope) == 'table' and scope['$destroyed'] then
       observers[callback] = nil
+      ids[callback] = nil
     else
       if type(callback) == 'thread' then
         if coroutine.status(callback) == 'dead' then
           observers[callback] = nil
         else
-          if id == nil or obs.id ~= id then
+          if id == nil or ids[callback] ~= id then
             local ok, msg = coroutine.resume(callback, v, idx, id)
             if not ok then error(msg) end
           end
         end
       else
-        if id == nil or obs.id ~=id then
+        if id == nil or ids[callback] ~=id then
           callback(v, idx, id)
         end
       end

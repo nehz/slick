@@ -166,6 +166,33 @@ describe('Observable', function()
     assert.is.same(done, {true, true})
   end)
 
+  it('should not get change notifications after unwatch()', function()
+    local o = Observable.new({a = 1})
+
+    local id, watcher = Observable.watch(o, 'a', function(v)
+      assert.is.equal(v, 1)
+      assert.is.equal(coroutine.yield(), 2)
+      coroutine.yield()
+      error()
+    end, nil, true)
+
+    o.a = 1
+    o.a = 2
+
+    local a = Observable.index(o, 'a')
+    local scope = a['$observers'][watcher]
+    assert.is_not.equal(a['$observers'][watcher], nil)
+    assert.is_not.equal(a['$observers_id'][scope][watcher], nil)
+
+    assert.is.equal(Observable.unwatch(o, 'a', 1), nil)
+    assert.is.equal(Observable.unwatch(o, 'a', watcher), watcher)
+
+    assert.is.equal(a['$observers'][watcher], nil)
+    assert.is.equal(a['$observers_id'][scope][watcher], nil)
+
+    o.a = 3
+  end)
+
   it('should not store [Observable] unless it is a slot', function()
     local o = Observable.new(1)
     assert.has.error(function()
@@ -190,5 +217,31 @@ describe('Observable', function()
     assert.is.equal(Observable.index(o, 'a'), slot_a)
     assert.is.equal(Observable.index(o, 'b'), slot_b)
     assert.is_not.equal(Observable.index(o, 'c'), nil)
+  end)
+
+  it('should clean up observers with weak scope', function()
+    local o = Observable.new({a = 1})
+    local s1 = Observable.new({test = 1})
+    local s2 = Observable.new({test = 1, ['$destroyed'] = true})
+    local w1 = function() end
+    local w2 = function() end
+    local w3 = function() end
+    local w4 = function() end
+
+    do
+      Observable.watch(o, nil, w1, s1)
+      Observable.watch(o, nil, w2, s2)
+      Observable.watch(o, nil, w3, {})
+      Observable.watch(o, nil, w4)
+    end
+
+    collectgarbage()
+    assert.is.equal(o['$observers'][w1], s1)
+    assert.is.equal(o['$observers'][w2], s2)
+    assert.is.equal(o['$observers'][w3], nil)
+    assert.is.equal(o['$observers'][w4], true)
+
+    Observable.notify(o, nil)
+    assert.is.equal(o['$observers'][w2], nil)
   end)
 end)
