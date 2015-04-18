@@ -196,6 +196,12 @@ function Observable.set(o, v, id)
   end
 
   Observable.notify(o, nil, v, id)
+  if is_indexable(v) then
+    for k, v in pairs(v) do
+      Observable.notify(o, k, v, id)
+    end
+  end
+
   rawset(o, '$value', v)
 end
 

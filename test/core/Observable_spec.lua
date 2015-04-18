@@ -114,19 +114,28 @@ describe('Observable', function()
     end)
   end)
 
-  it('should get change notifications', function()
+  it('should get change notifications with watch()', function()
     local done = {false, false}
     local o = Observable.new({a = 1})
     local a = Observable.index(o, 'a')
 
-    Observable.watch(o, 'a', function(v)
+    Observable.watch(o, 'a', function(v, idx)
       assert.is.equal(v, 1)
       assert.is.equal(coroutine.yield(), 2)
       assert.is.equal(coroutine.yield(), 3)
       assert.is.equal(coroutine.yield(), false)
       assert.is.equal(coroutine.yield(), 'test')
-      assert.is.equal(coroutine.yield().b, 1)
-      assert.is.equal(coroutine.yield().b, 2)
+
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {{b = 1}, nil})
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {1, 'b'})
+
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {{b = 2}, nil})
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {2, 'b'})
+
       done[1] = true
     end, nil, true)
 
@@ -144,9 +153,9 @@ describe('Observable', function()
       assert.is.same({v, idx}, {'test', 'a'})
 
       v, idx = coroutine.yield()
-      assert.is.same({v.b, idx}, {1, 'a'})
+      assert.is.same({v, idx}, {{b = 1}, 'a'})
       v, idx = coroutine.yield()
-      assert.is.same({v.b, idx}, {2, 'a'})
+      assert.is.same({v, idx}, {{b = 2}, 'a'})
 
       v, idx = coroutine.yield()
       assert.is.same({v, idx}, {5, 'c'})
