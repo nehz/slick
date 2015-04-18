@@ -64,8 +64,7 @@ function bindfenv(f, env, global_env, access_global)
           e.traceback = debug.traceback(t)
           error(e)
         else
-          assert(type(e) == 'string')
-          error(debug.traceback(t, e))
+          error(debug.traceback(t, tostring(e)))
         end
       end
 
