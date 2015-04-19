@@ -26,6 +26,8 @@ Observable.is_indexable = is_indexable
 
 local function make_slot(o, t, idx, v)
   assert(is_table(t))
+
+  if is_table(v) then v = Observable.new(v) end
   local slot = Observable.new(v, {slot = true})
   t[idx] = slot
 
@@ -53,7 +55,6 @@ function Observable.new(value, options)
     o = value
 
     for k, v in pairs(o) do
-      if is_table(v) then v = Observable.new(v) end
       make_slot(o, t, k, v)
       o[k] = nil
     end
