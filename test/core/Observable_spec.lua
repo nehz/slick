@@ -175,6 +175,66 @@ describe('Observable', function()
     assert.is.same(done, {true, true})
   end)
 
+  it('should get change notification on slot with watch()', function()
+    local o = Observable.new({a = {b = 1}})
+    local done = false
+
+    Observable.watch(o, 'a', function(v, idx)
+      assert.is.same({v, idx}, {1, 'b'})
+      v, idx = coroutine.yield()
+      assert.is.equal(idx, nil)
+      assert.is.same(v, {c = 2, d = 3})
+
+      for _ = 1, 3 do
+        v, idx = coroutine.yield()
+        if idx == 'b' then
+          assert.is.equal(v, nil)
+        elseif idx == 'c' then
+          assert.is.equal(v, 2)
+        elseif idx == 'd' then
+          assert.is.equal(v, 3)
+        else
+          error()
+        end
+      end
+
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {true, nil})
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {{b = 5}, nil})
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {5, 'b'})
+      v, idx = coroutine.yield()
+      assert.is.same({v, idx}, {'test', 'b'})
+
+      done = true
+    end, nil, true)
+
+    o.a.b = 1
+    o.a = {c = 2, d = 3}
+
+    local slot_a = Observable.index(o, 'a')
+    local value_observer = rawget(slot_a, '$value_observer')
+
+    assert.is_not.equal(value_observer, nil)
+    assert.is_not.equal(o.a['$observers'][value_observer], nil)
+    assert.is.equal(#table.keys(o.a['$observers']), 1)
+
+    local o_a = o.a
+    o.a = true
+    assert.is.equal(rawget(slot_a, '$value_observer'), nil)
+    assert.is.equal(o_a['$observers'][value_observer], nil)
+    assert.is.equal(#table.keys(o_a['$observers']), 0)
+
+    o.a = {b = 5}
+    assert.is_not.equal(rawget(slot_a, '$value_observer'), nil)
+    assert.is_not.equal(rawget(slot_a, '$value_observer'), value_observer)
+    assert.is.equal(o.a['$observers'][value_observer], nil)
+
+    o.a.b = 'test'
+    assert.is.equal(done, true)
+  end)
+
   it('should not get change notifications after unwatch()', function()
     local o = Observable.new({a = 1})
 

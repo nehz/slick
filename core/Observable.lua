@@ -24,6 +24,27 @@ end
 Observable.is_indexable = is_indexable
 
 
+local function observe_value(slot, v)
+  assert(is_observable(slot) and slot['$slot'])
+
+  -- Unregister current value observer
+  local slot_v = rawget(slot, '$value')
+  if slot_v ~= v and rawget(slot, '$value_observer') then
+    assert(is_observable(slot_v))
+    Observable.unwatch(slot_v, nil, slot['$value_observer'])
+    rawset(slot, '$value_observer', nil)
+  end
+
+  -- Register new value observer
+  if is_observable(v) and is_indexable(v) then
+    rawset(slot, '$value_observer', function(v, idx, id)
+      Observable.notify(slot, idx, v, id)
+    end)
+    Observable.watch(v, nil, slot['$value_observer'], slot)
+  end
+end
+
+
 local function make_slot(o, t, idx, v)
   assert(is_table(t))
 
@@ -31,10 +52,13 @@ local function make_slot(o, t, idx, v)
   local slot = Observable.new(v, {slot = true})
   t[idx] = slot
 
-  Observable.watch(slot, nil, function(v, _, id)
-    Observable.notify(o, idx, v, id)
+  Observable.watch(slot, nil, function(v, v_idx, id)
+    if v_idx == nil then
+      Observable.notify(o, idx, v, id)
+    end
   end)
 
+  observe_value(slot, v)
   return slot
 end
 
@@ -175,6 +199,8 @@ end
 
 
 function Observable.set(o, v, id)
+  assert(is_observable(o))
+
   if getmetatable(v) == nil then
     if is_table(v) then v = Observable.new(v) end
     if is_indexable(v) then
@@ -203,6 +229,7 @@ function Observable.set(o, v, id)
     end
   end
 
+  if o['$slot'] then observe_value(o, v) end
   rawset(o, '$value', v)
 end
 
