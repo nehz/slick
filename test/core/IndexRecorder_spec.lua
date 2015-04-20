@@ -1,0 +1,63 @@
+require('core.env')
+local IndexRecorder = require('core.IndexRecorder')
+
+
+describe('IndexRecorder', function()
+  it('should be [IndexRecorder] instance', function()
+    local i = IndexRecorder.new('test')
+    local r = i.a.b.c:d(1, 2, 3)
+    assert.is.equal(getmetatable(i), IndexRecorder)
+    assert.is.equal(getmetatable(r), IndexRecorder)
+  end)
+
+  it('should record index lookups', function()
+    local i = IndexRecorder.new('test')
+    local r = i.a.b.c
+    local info = IndexRecorder.info(r)
+    assert.is.same(table.concat(r), 'abc')
+    assert.is.equal(info.type, 'test')
+  end)
+
+  it('should record call args', function()
+    local i = IndexRecorder.new('test')
+    local r = i.a.b.c(1, 2, 3)
+    local info = IndexRecorder.info(r)
+    assert.is.same(table.concat(r), 'abc')
+    assert.is.equal(info.type, 'test')
+    assert.is.same(info.args, {1, 2, 3, n = 3})
+  end)
+
+  it('should record call args with id', function()
+    local i = IndexRecorder.new('test')
+    local r = i.a.b.c:d(1, 2, 3)
+    local info = IndexRecorder.info(r)
+    assert.is.same(table.concat(r), 'abc')
+    assert.is.equal(info.type, 'test')
+    assert.is.equal(info.id, 'd')
+    assert.is.same(info.args, {1, 2, 3, n = 3})
+  end)
+
+  it('should record init value', function()
+    local i = IndexRecorder.new('test')
+    local r = i.a.b.c:d(1, 2, 3) % 'init'
+    local info = IndexRecorder.info(r)
+    assert.is.same(table.concat(r), 'abc')
+    assert.is.equal(info.type, 'test')
+    assert.is.equal(info.id, 'd')
+    assert.is.equal(info.init, 'init')
+    assert.is.same(info.args, {1, 2, 3, n = 3})
+  end)
+
+  if _VERSION == 'Lua 5.3' then
+    it('should record init value using bxor operator', function()
+      local i = IndexRecorder.new('test')
+      local r = load('return i.a.b.c:d(1, 2, 3) ~ "init"', nil, 't', {i = i})()
+      local info = IndexRecorder.info(r)
+      assert.is.same(table.concat(r), 'abc')
+      assert.is.equal(info.type, 'test')
+      assert.is.equal(info.id, 'd')
+      assert.is.equal(info.init, 'init')
+      assert.is.same(info.args, {1, 2, 3, n = 3})
+    end)
+  end
+end)
