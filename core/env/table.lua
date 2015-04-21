@@ -12,6 +12,21 @@ function table.len(t)
 end
 
 
+function table.map(t, f, iter)
+  local results = {}
+  iter = iter or pairs
+  for k, v in iter(t) do
+    results[k] = f(v, k)
+  end
+  return results
+end
+
+
+function table.imap(t, f)
+  return table.map(t, f, ipairs)
+end
+
+
 function table.print(t)
   local Observable = require('core.Observable')
 
