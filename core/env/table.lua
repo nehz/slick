@@ -46,7 +46,12 @@ function table.print(t)
     if type(v) == 'table' then
       local iter = Observable.is_observable(v) and Observable.spairs or pairs
       for key, value in iter(v) do
-        local fmt = '%' .. indent .. 's[%s] => %s'
+        local fmt
+        if type(value) == 'string' then
+          fmt = '%' .. indent .. "s[%s] => '%s'"
+        else
+          fmt = '%' .. indent .. 's[%s] => %s'
+        end
         print(string.format(fmt, '', tostring(key), tostring(value)))
 
         if Observable.is_indexable(value) and not visited[value] then
