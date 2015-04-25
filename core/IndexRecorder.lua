@@ -37,6 +37,16 @@ end
 IndexRecorder.__bxor = IndexRecorder.__mod
 
 
+function IndexRecorder:__tostring()
+  if #self > 0 then
+    return string.format('IndexRecorder(%s.%s)',
+      self['$info'].type, table.concat(self, '.'))
+  else
+    return string.format('IndexRecorder(%s)', self.type)
+  end
+end
+
+
 function IndexRecorder.info(i)
   assert(getmetatable(i) == IndexRecorder)
   assert(rawget(i, 1))
