@@ -8,11 +8,7 @@ Observable.is_observable = is_observable
 
 
 local function is_table(t)
-  if type(t) == 'table' then
-    if getmetatable(t) == Observable then return false end
-    return true
-  end
-  return false
+  return type(t) == 'table' and getmetatable(t) == nil
 end
 Observable.is_table = is_table
 

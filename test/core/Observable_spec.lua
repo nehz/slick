@@ -41,10 +41,11 @@ describe('Observable', function()
 
     it('should not convert assigned `objects` to [Observable]', function()
       local o = Observable.new({})
-      local a = setmetatable({}, {})
+      local mt = {}
+      local a = setmetatable({}, mt)
       o.a = a
       assert.is_false(Observable.is_observable(o.a))
-      assert.is_true(Observable.is_table(o.a))
+      assert.is_true(getmetatable(o.a) == mt)
       assert.is.equal(a, o.a)
     end)
 
