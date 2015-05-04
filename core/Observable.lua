@@ -284,9 +284,10 @@ end
 function Observable.inext(o, idx)
   assert(is_observable(o))
   local t = Observable.unwrap_indexable(o)
-  local n = rawget(t, '$n') or #t
+  local n = #t
   idx = idx + 1
-  if idx <= n then return idx, Observable.unwrap(t[idx]) end
+  local v = Observable.unwrap(t[idx])
+  if idx <= n and v ~= nil then return idx, v end
 end
 
 
@@ -317,8 +318,7 @@ end
 
 
 function Observable:__len()
-  local t = Observable.unwrap_indexable(self)
-  return rawget(t, '$n') or #t
+  return #Observable.unwrap_indexable(self)
 end
 
 
