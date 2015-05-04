@@ -71,17 +71,16 @@ function Observable.new(value, options)
     assert(getmetatable(value) == nil)
 
     -- Shape table into an observable
-    local t = {}
     o = value
-
+    local t = {}
     for k, v in pairs(o) do
       make_slot(o, t, k, v)
       o[k] = nil
     end
-    rawset(o, '$value', t)
+    o['$value'] = t
   else
     o = {}
-    rawset(o, '$value', value)
+    o['$value'] = value
   end
 
   o['$observers'] = setmetatable({}, {__mode = 'v'})
