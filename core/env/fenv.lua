@@ -44,9 +44,8 @@ getfenv = rawget(_G, 'getfenv') or function(f)
 end
 
 
-function bindfenv(f, env, global_env, access_global)
+function bindfenv(f, env, global_env)
   if global_env == true then global_env = _G end
-  if access_global == true then setmetatable(global_env, {__index = _G}) end
   return function(...)
     local new_env = setmetatable(env, {__index = global_env})
     local t = coroutine.create(f)
