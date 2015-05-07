@@ -35,30 +35,35 @@ function table.print(t)
       print('nil')
       return
     end
-
     if not visited then
       print(tostring(v))
+    end
+    if type(v) ~= 'table' then
+      return
     end
 
     visited = visited or {}
     indent = (indent or 0) + 2
 
-    if type(v) == 'table' then
-      local iter = Observable.is_observable(v) and Observable.spairs or pairs
-      for key, value in iter(v) do
-        local fmt
-        if type(value) == 'string' then
-          fmt = '%' .. indent .. "s[%s] => '%s'"
-        else
-          fmt = '%' .. indent .. 's[%s] => %s'
-        end
-        print(string.format(fmt, '', tostring(key), tostring(value)))
-
-        if Observable.is_indexable(value) and not visited[value] then
-          visited[value] = true
-          tprint(value, indent, visited)
-        end
+    local iter = Observable.is_observable(v) and Observable.spairs or pairs
+    for key, value in iter(v) do
+      local fmt
+      if type(value) == 'string' then
+        fmt = '%' .. indent .. "s[%s] => '%s'"
+      else
+        fmt = '%' .. indent .. 's[%s] => %s'
       end
+      print(string.format(fmt, '', tostring(key), tostring(value)))
+
+      if type(value) == 'table' and not visited[value] then
+        if Observable.is_observable(value) and
+            not Observable.is_indexable(value) then
+          goto continue
+        end
+        visited[value] = true
+        tprint(value, indent, visited)
+      end
+      :: continue ::
     end
   end
 
