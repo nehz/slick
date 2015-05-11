@@ -334,7 +334,9 @@ end
 
 function Observable:__tostring()
   if self['$slot'] then
-    return string.format('<%s>', tostring(Observable.unwrap(self)))
+    local value = Observable.unwrap(self)
+    local fmt = type(value) == 'string' and "<'%s'>" or '<%s>'
+    return string.format(fmt, tostring(value))
   end
   return string.format('Observable(%s)', tostring(Observable.unwrap(self)))
 end
