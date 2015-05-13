@@ -318,7 +318,10 @@ end
 
 
 function Observable:__len()
-  return #Observable.unwrap_indexable(self)
+  --TODO: optimize this
+  local n = 0
+  for i in ipairs(self) do n = i end
+  return n
 end
 
 

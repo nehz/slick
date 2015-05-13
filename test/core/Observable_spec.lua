@@ -54,6 +54,14 @@ describe('Observable', function()
       local b = Observable.new({1, 2, 3, 4, 5, 6})
       assert.is.equal(#o.a, 5)
       assert.is.equal(#b, 6)
+
+      o.a[4] = nil
+      b[3] = nil
+      assert.is.equal(#o.a, 3)
+      assert.is.equal(#b, 2)
+
+      o.a[1] = nil
+      assert.is.equal(#o.a, 0)
     end)
 
     it('should be iterable with pairs', function()
