@@ -46,11 +46,12 @@ local function make_slot(o, t, idx, v)
 
   if is_table(v) then v = Observable.new(v) end
   local slot = Observable.new(v, {slot = true})
+  rawset(slot, '$idx', idx)
   t[idx] = slot
 
-  Observable.watch(slot, nil, function(v, v_idx, id)
-    if v_idx == nil then
-      Observable.notify(o, idx, v, id)
+  Observable.watch(slot, nil, function(v, idx, id)
+    if idx == nil then
+      Observable.notify(o, slot['$idx'], v, id)
     end
   end)
 
