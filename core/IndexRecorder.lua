@@ -54,4 +54,14 @@ function IndexRecorder.info(i)
 end
 
 
+function IndexRecorder.value(i)
+  assert(getmetatable(i) == IndexRecorder)
+  if #i == 0 then
+    return i.type
+  else
+    return i['$info'].type .. '.' .. table.concat(i, '.')
+  end
+end
+
+
 return IndexRecorder
