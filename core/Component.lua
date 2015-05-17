@@ -116,28 +116,37 @@ function Component.new(component, parent, ...)
   -- Init component attrs from args
   if parent then
     for name, arg in pairs(component.args) do
-      -- Resolve args
       if getmetatable(arg) ~= IndexRecorder then
         attr[name] = arg
         goto continue
       end
 
+      -- Bind attr
       local info = IndexRecorder.info(arg)
-      local x =
+      local source =
         (info.type == 'scope' and parent.scope) or
         (info.type == 'attr' and parent.attr) or
         (info.type == 'loop' and (scope['$loop'] or {})) or nil
 
-      if x then
-        x = table.vivify(x, arg, #arg - 1)
-        if Observable.is_observable(x) then
-          local slot = Observable.index(x, arg[#arg], true)
+      if source then
+        source = table.vivify(source, arg, #arg - 1)
+        if Observable.is_observable(source) then
+          -- `source` is an Observable table
+          local slot = Observable.index(source, arg[#arg], true)
           Observable.set_slot(attr, name, slot)
+
+          -- Bind initial value
           if info.init ~= nil and info.type == 'scope' then
             attr[name] = info.init
           end
         else
-          attr[name] = x[arg[#arg]]
+          -- `source` is a plain table that may contain slots
+          local v = source[arg[#arg]]
+          if Observable.is_observable(v) then
+            Observable.set_slot(attr, name, v)
+          else
+            attr[name] = v
+          end
         end
       else
         assert(info.type == 'ui' or info.type == 'component', info.type)
