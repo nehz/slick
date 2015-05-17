@@ -7,8 +7,8 @@ end
 Observable.is_observable = is_observable
 
 
-local function is_table(t)
-  return type(t) == 'table' and getmetatable(t) == nil
+local function is_table(t, mt)
+  return type(t) == 'table' and getmetatable(t) == mt
 end
 Observable.is_table = is_table
 
@@ -42,8 +42,6 @@ end
 
 
 local function make_slot(o, t, idx, v)
-  assert(is_table(t))
-
   if is_table(v) then v = Observable.new(v) end
   local slot = Observable.new(v, {slot = true})
   rawset(slot, '$idx', idx)
@@ -101,22 +99,26 @@ function Observable.wrap(v)
 end
 
 
-function Observable.unwrap(o)
+function Observable.unwrap(o, mt)
   if is_observable(o) then
     local v = rawget(o, '$value')
     if is_observable(v) then
-      assert(not v['$slot'] and is_table(rawget(v, '$value')))
+      mt = rawget(v, '$mt') or mt
+      assert(not v['$slot'], 'Should not be slot')
+      assert(is_table(rawget(v, '$value'), mt), 'Unexpected value')
+    elseif type(v) == 'table' then
+      mt = rawget(o, '$mt') or mt
     end
-    return v
+    return v, mt
   end
-  return o
+  return o, mt
 end
 
 
 function Observable.unwrap_indexable(o)
   -- Unwrap twice for slots (slot -> obs -> value(table))
-  local t = Observable.unwrap(Observable.unwrap(o))
-  assert(is_table(t), '[table] expected, got ' .. tostring(t))
+  local t, mt = Observable.unwrap(Observable.unwrap(o))
+  assert(is_table(t, mt), '[table] expected, got ' .. tostring(t))
   return t
 end
 
@@ -247,6 +249,13 @@ function Observable.index(o, idx, create_nil)
     make_slot(o, t, idx, nil)
   end
   return t[idx]
+end
+
+
+function Observable.set_metatable(o, mt)
+  local t = Observable.unwrap_indexable(o)
+  rawset(o, '$mt', mt)
+  setmetatable(t, mt)
 end
 
 

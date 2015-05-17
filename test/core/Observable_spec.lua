@@ -324,4 +324,21 @@ describe('Observable', function()
     assert.is.equal(o['$observers'][w2], nil)
     assert.is.equal(#table.keys(o['$observers']), 2)
   end)
+
+  it('should set metatable on Observable table', function()
+    local store = {}
+    local mt = {__index = store, __newindex = store}
+    local o = Observable.new({a = 1}, {allow_metatable = true})
+    Observable.set_metatable(o, mt)
+    assert.is.equal(o.a, 1)
+    assert.is.equal(Observable.unwrap(Observable.index(o, 'a')), o.a)
+    assert.is.equal(Observable.is_observable(Observable.index(o, 'a')), true)
+    o.b = 2
+    assert.is.equal(o.b, 2)
+    assert.is.equal(Observable.unwrap(Observable.index(o, 'b')), o.b)
+    assert.is.equal(Observable.is_observable(Observable.index(o, 'b')), true)
+    assert.is.equal(Observable.unwrap(store.b), o.b)
+    assert.is.equal(Observable.is_observable(store.b), true)
+    assert.is.equal(store.c, nil)
+  end)
 end)
