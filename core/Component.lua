@@ -102,6 +102,7 @@ function Component.new(component, parent, ...)
   rawset(scope, '$component', component)
   rawset(scope, '$id', component.id)
   rawset(scope, '$listeners', {})
+  rawset(scope, '$watchers', {attr = {}})
   rawset(scope, '$dispatch', {})
 
   function component.env.trigger(event_name, ...)
@@ -153,10 +154,15 @@ function Component.new(component, parent, ...)
 
     if info.type == 'attr' then
       if #ir ~= 1 then
-        local attr = info.type .. '.' .. table.concat(ir, '.')
-        error('Invalid attr watch: ' .. attr)
+        error('Invalid attr watch: ' .. IndexRecorder.value(attr))
       end
-      Observable.watch(attr, ir[1], bindfenv(watcher, component.env, true))
+      local attr_name = ir[1]
+      if scope['$watchers'].attr[attr_name] then
+        error('Duplicate attr watch found: ' .. IndexRecorder.value(attr))
+      end
+      watcher = bindfenv(watcher, component.env, true)
+      Observable.watch(attr, attr_name, watcher)
+      scope['$watchers'].attr[attr_name] = watcher
     elseif info.type == 'scope' then
       error('Scope watch not supported')
     elseif info.type ~= 'id' then
@@ -173,15 +179,14 @@ function Component.new(component, parent, ...)
       local info = IndexRecorder.info(ir)
       if info.type ~= 'id' then goto continue end
 
-      local id = info.type .. '.' .. table.concat(ir, '.')
       if #ir >= 3 then
-        error('Invalid listener for: ' .. id)
+        error('Invalid listener for: ' .. IndexRecorder.value(id))
       end
 
       if ir[1] ~= component.id then goto continue end
       if #ir == 1 then
         if type(listener) ~= 'table' then
-          error('Expected listener table for: ' .. id)
+          error('Expected listener table for: ' .. IndexRecorder.value(id))
         end
         for event, f in pairs(listener) do
           local listeners = table.vivify(scope, {'$listeners', event})
@@ -230,6 +235,7 @@ function Component.build(component, parent, ...)
   end
 
   assert(element)
+  component.element = element
   rawset(component.scope, '$element', element)
 
   -- Platform specific build hook
@@ -243,8 +249,17 @@ end
 
 
 function Component.destroy(component)
+  for id, key in pairs(component.scope['$dispatch']) do
+    Dispatcher.remove(platform.dispatcher, id, key)
+  end
+
+  for attr_name, watcher in pairs(component.scope['$watchers'].attr) do
+    assert(Observable.unwatch(component.attr, attr_name, watcher))
+  end
+
   if component.scope['$panel'] then
     Component.destroy(component.scope['$panel'])
+    component.scope['$panel'] = nil
   end
 
   local controller = component.controller
@@ -253,14 +268,12 @@ function Component.destroy(component)
   end
 
   if platform.destroy_element then
-    platform.destroy_element(component.scope['$element'])
+    platform.destroy_element(component.element)
   end
+  component.element = nil
   component.scope['$element'] = nil
   component.scope['$destroyed'] = true
 
-  for id, key in pairs(component.scope['$dispatch']) do
-    Dispatcher.remove(platform.dispatcher, id, key)
-  end
 end
 
 
