@@ -72,7 +72,13 @@ end
 
 
 function table.vivify(t, keys, n)
-  for i = 1, n or #keys do
+  assert(type(t) == 'table', 'argument #1 is not a table')
+  assert(type(keys) == 'table', 'argument #2 is not a table')
+
+  n = n or #keys
+  assert(type(n) == 'number', 'argument #3 is not a number or nil')
+
+  for i = 1, n do
     local v = keys[i]
     if t[v] == nil then t[v] = {} end
     t = t[v]
