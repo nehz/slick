@@ -1,3 +1,22 @@
+function table.copy(t, iter, deep, copy)
+  copy = copy or {}
+  iter = iter or pairs
+  for k, v in iter(t) do
+    if deep and type(v) == 'table' then
+      copy[k] = table.copy(v, iter, deep)
+    else
+      copy[k] = v
+    end
+  end
+  return copy
+end
+
+
+function table.icopy(t, deep, copy)
+  return table.copy(t, ipairs, deep, copy)
+end
+
+
 function table.keys(t)
   local keys = {}
   for k in pairs(t) do
