@@ -1,3 +1,39 @@
+function table.insert(o, ...)
+  local Observable = require('core.Observable')
+  local nargs = select('#', ...)
+  local t
+  if Observable.is_observable(o) then
+    t = Observable.unwrap_indexable(o)
+  else
+    t = o
+  end
+
+  local n = #o
+  if nargs == 1 then
+    local v = ...
+    o[n + 1] = v
+    return v
+  elseif nargs == 2 then
+    local pos, v = ...
+    if not (1 <= pos and pos <= n + 1) then
+      error('table.insert position out of bounds', 2)
+    end
+    for i = n, pos, -1 do
+      if Observable.is_observable(t[i]) then
+        assert(t[i]['$slot'])
+        t[i]['$idx'] = i + 1
+      end
+      t[i + 1] = t[i]
+    end
+    t[pos] = nil
+    o[pos] = v
+    return v
+  else
+    error('table.insert takes 2 or 3 parameters', 2)
+  end
+end
+
+
 function table.copy(t, iter, deep, copy)
   copy = copy or {}
   iter = iter or pairs
