@@ -170,8 +170,8 @@ function Component.new(component, parent, ...)
         error('Duplicate attr watch found: ' .. IndexRecorder.value(attr))
       end
       watcher = bindfenv(watcher, component.env, true)
-      Observable.watch(attr, attr_name, watcher)
-      scope['$watchers'].attr[attr_name] = watcher
+      local id = Observable.watch(attr, attr_name, watcher)
+      scope['$watchers'].attr[attr_name] = {func = watcher, id = id}
     elseif info.type == 'scope' then
       error('Scope watch not supported')
     elseif info.type ~= 'id' then
@@ -263,7 +263,7 @@ function Component.destroy(component)
   end
 
   for attr_name, watcher in pairs(component.scope['$watchers'].attr) do
-    assert(Observable.unwatch(component.attr, attr_name, watcher))
+    assert(Observable.unwatch(component.attr, attr_name, watcher.func))
   end
 
   if component.scope['$panel'] then
