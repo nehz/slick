@@ -14,7 +14,7 @@ controller {
     scope.set_text(v)
   end,
 
-  ['$new'] = function(component, parent, activity)
+  ['$new'] = function()
     local element = js.global.document:createElement('button')
     element.className = 'ui button'
     return element

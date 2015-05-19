@@ -22,7 +22,7 @@ controller {
     if v then scope['$element'].value = tostring(v) end
   end,
 
-  ['$new'] = function(component, parent, activity)
+  ['$new'] = function()
     local element = js.global.document:createElement('input')
     element.className = 'ui edit'
     return element

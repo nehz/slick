@@ -21,7 +21,7 @@ controller {
 
   [attr.loop] = Panel.watch,
 
-  ['$new'] = function(component, parent, root)
+  ['$new'] = function()
     local element = js.global.document:createElement('div')
     element.className = 'ui panel'
     return element

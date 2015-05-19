@@ -14,7 +14,7 @@ controller {
     if v then scope.set_text(tostring(v)) end
   end,
 
-  ['$new'] = function(component, parent)
+  ['$new'] = function()
     local element = js.global.document:createElement('span')
     element.className = 'ui text'
     return element
