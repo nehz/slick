@@ -95,8 +95,7 @@ function Component.new(component, parent, ...)
   end
 
   table.insert(Component.instances, component)
-  local attr = component.attr
-  local scope = component.scope
+  local attr, scope = component.attr, component.scope
 
   rawset(scope, '$parent', parent)
   rawset(scope, '$component', component)
@@ -258,17 +257,18 @@ end
 
 
 function Component.destroy(component)
-  for id, key in pairs(component.scope['$dispatch']) do
+  local attr, scope = component.attr, component.scope
+
+  for id, key in pairs(scope['$dispatch']) do
     Dispatcher.remove(platform.dispatcher, id, key)
   end
 
-  for attr_name, watcher in pairs(component.scope['$watchers'].attr) do
-    assert(Observable.unwatch(component.attr, attr_name, watcher.func))
+  for attr_name, watcher in pairs(scope['$watchers'].attr) do
+    assert(Observable.unwatch(attr, attr_name, watcher.func))
   end
 
-  if component.scope['$panel'] then
-    Component.destroy(component.scope['$panel'])
-    component.scope['$panel'] = nil
+  if scope['$panel'] then
+    Component.destroy(scope['$panel'])
   end
 
   local controller = component.controller
@@ -280,9 +280,13 @@ function Component.destroy(component)
     platform.destroy_element(component.element)
   end
   component.element = nil
-  component.scope['$element'] = nil
-  component.scope['$destroyed'] = true
 
+  setmetatable(scope, nil)
+  for k in pairs(scope) do scope[k] = nil end
+  scope['$destroyed'] = true
+
+  setmetatable(attr, nil)
+  for k in pairs(attr) do attr[k] = nil end
 end
 
 
