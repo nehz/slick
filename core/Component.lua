@@ -68,7 +68,7 @@ function Component.get(component, id, args)
     if info.type == 'ui' then
       prefix = 'platform.' .. platform.name .. '.ui.'
     elseif info.type == 'component' then
-      prefix = 'app.components.'
+      prefix = 'components.'
     else
       error('Invalid component: ' .. path)
     end
