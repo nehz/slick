@@ -21,10 +21,12 @@ end
 
 
 function platform.build(component)
-  -- Bind general events
-  platform.event_listener(component.scope, 'onclick', function()
-    component.env.trigger('click')
-  end)
+  if component.id then
+    -- Bind general events
+    platform.event_listener(component.scope, 'onclick', function()
+      component.env.trigger('click')
+    end)
+  end
 end
 
 

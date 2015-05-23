@@ -8,12 +8,12 @@ controller {
       scope['$element']:appendChild(child.element)
     end
 
-    function scope.insert_child(idx, child)
+    function scope.insert_child(child, idx)
       scope['$element']:insertBefore(child.element, scope.children[idx].element)
     end
 
-    function scope.remove_child(idx)
-      scope['$element']:removeChild(scope.children[idx].element)
+    function scope.remove_child(child)
+      scope['$element']:removeChild(child.element)
     end
 
     Panel.init(attr, scope, loop)

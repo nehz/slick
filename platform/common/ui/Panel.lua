@@ -31,7 +31,7 @@ function Panel.build_child(scope, idx, value, id)
     return
   end
 
-  scope.insert_child(idx, child)
+  scope.insert_child(child, idx)
 
   -- Replace
   if id ~= table.insert then
@@ -56,7 +56,7 @@ end
 function Panel.delete_child(scope, idx)
   local child = scope.children[idx]
   if child then
-    scope.remove_child(idx)
+    scope.remove_child(child)
     Component.destroy(child)
     scope.children[idx] = nil
   end

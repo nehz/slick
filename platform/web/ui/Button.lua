@@ -4,8 +4,8 @@ local platform = require('platform').is('web')
 controller {
   function()
     function scope.set_text(text)
-      scope['$element'].innerText = text or 'Button'
-      scope['$element'].textContent = text or 'Button'
+      scope['$element'].innerText = tostring(text or 'Button')
+      scope['$element'].textContent = tostring(text or 'Button')
     end
     scope.set_text(attr[1])
   end,
