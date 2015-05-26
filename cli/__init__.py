@@ -182,9 +182,10 @@ def setup(platform):
     template_path = os.path.join(module_path, 'build', platform)
     base_path = os.path.join(os.path.dirname(module_path))
     core_path = os.path.join(base_path, 'core')
-    platform_path = os.path.join(base_path, 'platform')
-    common_path = os.path.join(platform_path, platform, 'common')
-    platform_native_path = os.path.join(platform_path, platform, 'native')
+    platform_base_path = os.path.join(base_path, 'platform')
+    platform_path = os.path.join(platform_base_path, platform)
+    platform_common_path = os.path.join(platform_path, 'common')
+    platform_native_path = os.path.join(platform_path, 'native')
 
     context = {
         'app': config,
@@ -195,10 +196,10 @@ def setup(platform):
     copy_dir('components', os.path.join(package_path, 'components'), context)
     copy_dir(core_path, os.path.join(package_path, 'core'), context)
     copy_dir(platform_native_path, os.path.join(build_path, 'native'), context)
-    copy_dir(os.path.join(platform_path),
+    copy_dir(os.path.join(platform_base_path),
              os.path.join(package_path, 'platform'), context,
              skip_dirs=[platform_native_path],
-             match_dirs=[platform_path, common_path])
+             match_dirs=[platform_path, platform_common_path])
 
     native_modules = next(os.walk(native_path))[1]
     native_modules = [os.path.join(native_path, p) for p in native_modules]
