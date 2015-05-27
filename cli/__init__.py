@@ -184,7 +184,7 @@ def setup(platform):
     core_path = os.path.join(base_path, 'core')
     platform_base_path = os.path.join(base_path, 'platform')
     platform_path = os.path.join(platform_base_path, platform)
-    platform_common_path = os.path.join(platform_path, 'common')
+    platform_common_path = os.path.join(platform_base_path, 'common')
     platform_native_path = os.path.join(platform_path, 'native')
 
     context = {
