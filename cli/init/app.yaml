@@ -8,4 +8,6 @@ android:
   target: latest
 
 ios:
+  target: latest
+
 wp:
