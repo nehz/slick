@@ -11,7 +11,7 @@ import yaml
 from argparse import ArgumentParser
 from mako.template import Template
 
-PLATFORMS = {'all', 'android'}
+PLATFORMS = {'all', 'android', 'ios'}
 CONFIG_REQUIRE = {'name', 'id', 'launch', 'version'}
 SEMVER_MULTIPLIER = 100
 
