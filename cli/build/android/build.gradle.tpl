@@ -1,4 +1,4 @@
-<%! import os, os.path as path, json %>
+<%! import json %>
 import org.apache.tools.ant.taskdefs.condition.Os
 
 buildscript {
@@ -30,27 +30,27 @@ android {
 
   sourceSets {
     main {
-      manifest.srcFile ${ path.join(build_path, 'AndroidManifest.xml') | json.dumps }
+      manifest.srcFile "AndroidManifest.xml"
       java.srcDirs = [
         % for src in native_modules:
-            ${ path.join(src, 'java') | json.dumps },
+            ${ 'native/' + src + '/java' | json.dumps },
         % endfor
       ]
       res.srcDirs = [
         % for src in native_modules:
-            ${ path.join(src, 'res') | json.dumps },
+            ${ 'native/' + src + '/res' | json.dumps },
         % endfor
       ]
       assets.srcDirs = [
         % for src in native_modules:
-            ${ path.join(src, 'assets') | json.dumps },
+            ${ 'native/' + src + '/assets' | json.dumps },
         % endfor
-        ${ package_path | json.dumps },
+        "package",
       ]
       jni.srcDirs = []
       jniLibs.srcDirs = [
         % for src in native_modules:
-            ${ path.join(src, 'libs') | json.dumps },
+            ${ 'native/' + src + '/libs' | json.dumps },
         % endfor
       ]
     }
@@ -66,8 +66,8 @@ android {
   % if app['android']['ndk']:
       task ndkBuild(type: Exec) {
         % for src in native_modules:
-            % if path.exists(path.join(src, 'jni')):
-                workingDir file(${ path.join(src, 'jni') | json.dumps })
+            % if path.exists(path.join(build_path, 'native', src, 'jni')):
+                workingDir file(${ 'native/' + src + '/jni' | json.dumps })
                 commandLine getNdkBuildCmd()
             % endif
         % endfor
@@ -79,8 +79,8 @@ android {
 
       task cleanNative(type: Exec) {
         % for src in native_modules:
-            % if path.exists(path.join(src, 'jni')):
-                workingDir file(${ path.join(src, 'jni') | json.dumps })
+            % if path.exists(path.join(build_path, 'native', src, 'jni')):
+                workingDir file(${ 'native/' + src + '/jni' | json.dumps })
                 commandLine getNdkBuildCmd(), 'clean'
             % endif
         % endfor

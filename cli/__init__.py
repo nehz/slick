@@ -43,7 +43,8 @@ def copy_dir(src, dst, tpl_context, skip_dirs=None, match_dirs=None):
                 with open(tpl_path, 'wb') as w:
                     tpl = Template(filename=file,
                                    input_encoding='utf-8',
-                                   output_encoding='utf-8')
+                                   output_encoding='utf-8',
+                                   imports=['import os, os.path as path'])
                     w.write(tpl.render(**tpl_context))
             elif (not os.path.exists(target) or
                     os.path.getmtime(file) > os.path.getmtime(target)):
@@ -193,7 +194,6 @@ def setup(platform):
     context = {
         'app': config,
         'build_path': build_path,
-        'package_path': os.path.join(build_path, 'package'),
     }
 
     copy_dir('components', os.path.join(package_path, 'components'), context)
@@ -204,10 +204,7 @@ def setup(platform):
              skip_dirs=[platform_native_path],
              match_dirs=[platform_path, platform_common_path])
 
-    native_modules = next(os.walk(native_path))[1]
-    native_modules = [os.path.join(native_path, p) for p in native_modules]
-    context['native_modules'] = native_modules
-
+    context['native_modules'] = next(os.walk(native_path))[1]
     copy_dir(template_path, build_path, context)
 
 
