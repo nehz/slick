@@ -16,7 +16,7 @@ controller {
     scope.set_text(v)
   end,
 
-  ['$new'] = function(component)
+  ['$new'] = function()
     return Button(platform.activity)
   end
 }

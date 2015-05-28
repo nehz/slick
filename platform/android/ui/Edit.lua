@@ -1,10 +1,8 @@
 local platform = require('platform').is('android')
 local Observable = require('core.Observable')
-local Dispatcher = require('core.Dispatcher')
 
 local java = require('platform.android.java')
 local EditText = java.import('android.widget.EditText')
-local EventListener = java.import('com.slick.core.EventListener')
 
 
 controller {
@@ -24,7 +22,7 @@ controller {
     scope.set_text(v)
   end,
 
-  ['$new'] = function(component, parent, activity)
+  ['$new'] = function()
     return EditText(platform.activity)
   end
 }

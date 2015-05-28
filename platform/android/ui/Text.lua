@@ -16,7 +16,7 @@ controller {
     scope.set_text(v)
   end,
 
-  ['$new'] = function(component, parent)
+  ['$new'] = function()
     return TextView(platform.activity)
   end
 }
