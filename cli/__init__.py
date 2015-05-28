@@ -40,8 +40,11 @@ def copy_dir(src, dst, tpl_context, skip_dirs=None, match_dirs=None):
 
             tpl_path, ext = os.path.splitext(target)
             if ext == '.tpl':
-                with open(tpl_path, 'w', encoding='utf-8') as w:
-                    w.write(Template(filename=file).render(**tpl_context))
+                with open(tpl_path, 'wb') as w:
+                    tpl = Template(filename=file,
+                                   input_encoding='utf-8',
+                                   output_encoding='utf-8')
+                    w.write(tpl.render(**tpl_context))
             elif (not os.path.exists(target) or
                     os.path.getmtime(file) > os.path.getmtime(target)):
                 shutil.copyfile(file, target)
