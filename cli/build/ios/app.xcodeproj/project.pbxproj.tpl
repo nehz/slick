@@ -17,6 +17,7 @@
 	  '.xcodeproj': 'wrapper.pb-project',
 	  '.bundle': 'wrapper.plug-in',
 	  '.xib': 'file.xib',
+		'.storyboard': 'file.storyboard',
 	  '.a': 'archive.ar',
 	  '.c': 'sourcecode.c.c',
 	  '.cpp': 'sourcecode.cpp.cpp',
@@ -71,9 +72,9 @@
 						%>
 						${ file_ref } = {
 							isa = PBXFileReference;
-							path = ${ file };
+							path = "${ file }";
 							% if ext in filetypes:
-								lastKnownFileType = ${ filetypes[ext] };
+								explicitFileType = ${ filetypes[ext] };
 							% endif
 						};
 						% if ext in phases['source']:
@@ -87,6 +88,22 @@
 				% endfor
 		% endfor
 
+		${ uuid.package_dir } = {
+			isa = PBXFileReference;
+			explicitFileType = folder;
+			path = package;
+		};
+		${ uuid.package_build_ref } = {
+			isa = PBXBuildFile;
+			fileRef = ${ uuid.package_dir };
+		};
+		${ uuid.app_file } = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			path = "${ app['name'] }.app";
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+
 		${ uuid.build_configs } = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -94,17 +111,28 @@
 				${ uuid.build_release_config },
 			);
 		};
+
 		${ uuid.target } = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = ${ uuid.target_configs };
 			buildPhases = (
 				${ uuid.build_source_phase },
 				${ uuid.build_framework_phase },
+				${ uuid.build_resources_phase },
 			);
 			name = "${ app['name'] }";
 			productName = "${ app['name'] }";
+			productReference = ${ uuid.app_file };
 			productType = "com.apple.product-type.application";
 		};
+		${ uuid.target_configs } = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				${ uuid.target_debug_config },
+				${ uuid.target_release_config },
+			);
+		};
+
 		${ uuid.build_source_phase } = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -125,12 +153,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		${ uuid.target_configs } = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				${ uuid.target_debug_config },
-				${ uuid.target_release_config },
+		${ uuid.build_resources_phase } = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				${ uuid.package_build_ref },
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 
 		<%def name="common_build_settings()">
